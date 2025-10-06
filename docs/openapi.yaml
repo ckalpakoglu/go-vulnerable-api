@@ -1,0 +1,195 @@
+openapi: 3.0.3
+info:
+  title: Go Vulnerable API (Echo + JWT)
+  version: 1.0.0
+  description: |
+    Dummy REST API using Echo and JWT. Users are hardcoded and passwords are returned for demo purposes.
+servers:
+  - url: http://localhost:8080
+    description: Local server
+tags:
+  - name: health
+  - name: auth
+  - name: users
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: JWT
+  schemas:
+    Error:
+      type: object
+      properties:
+        error:
+          type: string
+      required: [error]
+    LoginRequest:
+      type: object
+      properties:
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+      required: [email, password]
+    LoginResponse:
+      type: object
+      properties:
+        token:
+          type: string
+      required: [token]
+    User:
+      type: object
+      properties:
+        id:
+          type: string
+          format: uuid
+        email:
+          type: string
+          format: email
+        password:
+          type: string
+          description: Returned for demo purposes
+        mobile:
+          type: string
+      required: [id, email, password, mobile]
+paths:
+  /health:
+    get:
+      tags: [health]
+      summary: Health check
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status:
+                    type: string
+                required: [status]
+  /login:
+    post:
+      tags: [auth]
+      summary: Login and receive a JWT
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+      responses:
+        '200':
+          description: JWT issued
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '400':
+          description: Invalid request
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Invalid credentials
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users:
+    get:
+      tags: [users]
+      summary: List users (admin only)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: List of users
+          content:
+            application/json:
+              schema:
+                type: array
+                items:
+                  $ref: '#/components/schemas/User'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '403':
+          description: Forbidden (not admin)
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/hello:
+    get:
+      tags: [users]
+      summary: Hello for current user
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Hello and current user
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  message:
+                    type: string
+                  user:
+                    $ref: '#/components/schemas/User'
+                required: [message, user]
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+  /users/mobile:
+    get:
+      tags: [users]
+      summary: Get user by mobile
+      security:
+        - bearerAuth: []
+      parameters:
+        - in: query
+          name: mobile
+          schema:
+            type: string
+          required: true
+          description: Mobile number to search
+      responses:
+        '200':
+          description: Matching user
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/User'
+        '400':
+          description: Missing/invalid query
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '401':
+          description: Unauthorized
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+        '404':
+          description: Not found
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Error'
+
+
+
+

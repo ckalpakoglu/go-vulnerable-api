@@ -1,0 +1,4 @@
+
+- File inclusion zafiyeti ekle
+    -- HTML rapor download et 
+- proc file expose et
